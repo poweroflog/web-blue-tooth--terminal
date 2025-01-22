@@ -142,7 +142,9 @@ const transposeMatrix = mat => {  // 행렬 변환
 
 const multiplyMatrix = (m1, m2) => { // 행렬 곱
     try {
+
       const ret = [];
+      logToTerminal(JSON.stringify(m1), JSON.stringify(m2));
       for (let i = 0; i < m1.length; i++) {
         const tmp = [];
         for (let j = 0; j < m2[0].length; i++) {
@@ -176,8 +178,8 @@ function getPosition() { // 위치 측정
       Math.pow(anchor_pos[i].x, 2) + Math.pow(anchor_pos[i].y, 2) - Math.pow(dist[i], 2) - Math.pow(anchor_pos[1].x, 2) + Math.pow(anchor_pos[1].y, 2) - Math.pow(dist[1], 2)
     ])
   }
+  JSON.stringify
 
-  logToTerminal(m1, m2);
   const transM1 = transposeMatrix(m1);
   const position = multiplyMatrix(multiplyMatrix(inverseMatrix2d(multiplyMatrix(transM1, m1)), transM1), m2);
 
