@@ -10,19 +10,20 @@ class KalmanFilter {
   }
 
 	filtering(rssi) {
-		if (!this.initialized) {
-			this.initialized = true;
-			this.priorRSSI = rssi;
-			this.priorErrorCovariance = 1;
-    }
-		else {
-			this.priorRSSI = this.predictedRSSI;
-			this.priorErrorCovariance = this.errorCovariance + this.processNoise;
+		// if (!this.initialized) {
+		// 	this.initialized = true;
+		// 	this.priorRSSI = rssi;
+		// 	this.priorErrorCovariance = 1;
+    // }
+		// else {
+		// 	this.priorRSSI = this.predictedRSSI;
+		// 	this.priorErrorCovariance = this.errorCovariance + this.processNoise;
 
-		  const kalmanGain = this.priorErrorCovariance / (this.priorErrorCovariance + this.measurementNoise);
-		  this.predictedRSSI = this.priorRSSI == 1 ? rssi : this.priorRSSI + (kalmanGain * (rssi - this.priorRSSI));
-		  this.errorCovarianceRSSI = (1 - kalmanGain) * this.priorErrorCovariance;
-    }
+		//   const kalmanGain = this.priorErrorCovariance / (this.priorErrorCovariance + this.measurementNoise);
+		//   this.predictedRSSI = this.priorRSSI == 1 ? rssi : this.priorRSSI + (kalmanGain * (rssi - this.priorRSSI));
+		//   this.errorCovarianceRSSI = (1 - kalmanGain) * this.priorErrorCovariance;
+    // }
+    this.predictedRSSI = rssi;
   }
 
   getRSSI() {
@@ -69,7 +70,7 @@ const rssi = [new KalmanFilter(), new KalmanFilter(), new KalmanFilter(), new Ka
 let scan = null;
 let scanOn = false;
 
-async function onButtonClick() {
+async function onButtonClick() { // 버튼 클릭 시 스캔 시작
   scanOn = !scanOn;
   if (!scanOn) {
     logToTerminal('Stopping scan...');
@@ -185,6 +186,7 @@ function getPosition() { // 위치 측정
   return [position[0][0], position[1][0]];
 }
 
+// miscs
 const connectBtn = document.getElementById('connect');
 connectBtn.addEventListener('click', onButtonClick);
 
