@@ -3,7 +3,7 @@ class KalmanFilter {
 		this.initialized = false;
 		this.processNoise = processNoise;
 		this.measurementNoise = measurementNoise;
-		this.predictedRSSI = 0;
+		this.predictedRSSI = 1;
     this.priorRSSI = 1;
 		this.errorCovariance = 0;
     this.priorErrorCovariance = 0;
@@ -20,7 +20,7 @@ class KalmanFilter {
 			this.priorErrorCovariance = this.errorCovariance + this.processNoise;
 
 		  const kalmanGain = this.priorErrorCovariance / (this.priorErrorCovariance + this.measurementNoise);
-		  this.predictedRSSI = this.priorRSSI === 1 ? rssi : this.priorRSSI + (kalmanGain * (rssi - this.priorRSSI));
+		  this.predictedRSSI = this.priorRSSI == 1 ? rssi : this.priorRSSI + (kalmanGain * (rssi - this.priorRSSI));
 		  this.errorCovarianceRSSI = (1 - kalmanGain) * this.priorErrorCovariance;
     }
   }
@@ -135,7 +135,7 @@ const transposeMatrix = mat => {  // 행렬 변환
 
     return ret;
   } catch (error) {
-    logToTerminal(`Error: ${error}`);
+    logToTerminal(`Error transposing matrix: ${error}`);
     return [];
   }
 };
@@ -155,7 +155,7 @@ const multiplyMatrix = (m1, m2) => { // 행렬 곱
 
       return ret;
     } catch (error) {
-      logToTerminal(`Error: ${error}`);
+      logToTerminal(`Error multiplying matrix: ${error}`);
       return [];
     }
 }
@@ -177,6 +177,7 @@ function getPosition() { // 위치 측정
     ])
   }
 
+  logToTerminal(m1, m2);
   const transM1 = transposeMatrix(m1);
   const position = multiplyMatrix(multiplyMatrix(inverseMatrix2d(multiplyMatrix(transM1, m1)), transM1), m2);
 
