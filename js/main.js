@@ -99,6 +99,7 @@ async function onButtonClick() {
       const idx = Number(event.device.name.replace('M09-', ''));
       rssi[idx].filtering(Number(event.rssi));
       logToTerminal(`got rssi: [ ${rssi[0].getRSSI()}, ${rssi[1].getRSSI()}, ${rssi[2].getRSSI()}, ${rssi[3].getRSSI()} ]`);
+      logToTerminal(getPosition());
     });
   } catch(error)  {
     log('ERROR: ' + error);
