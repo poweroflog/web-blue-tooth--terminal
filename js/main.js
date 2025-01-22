@@ -99,7 +99,7 @@ async function onButtonClick() {
       const idx = Number(event.device.name.replace('M09-', ''));
       rssi[idx].filtering(Number(event.rssi));
       logToTerminal(`got rssi: [ ${rssi[0].getRSSI()}, ${rssi[1].getRSSI()}, ${rssi[2].getRSSI()}, ${rssi[3].getRSSI()} ]`);
-      logToTerminal(getPosition());
+      logToTerminal(`pos: ${JSON.stringify(getPosition())}`);
     });
   } catch(error)  {
     log('ERROR: ' + error);
@@ -131,7 +131,7 @@ const transposeMatrix = mat => {  // 행렬 변환
 
     return ret;
   } catch (error) {
-    console.log("fdf");
+    logToTerminal(`Error transposing matrix: ${error}`);
     return [];
   }
 };
@@ -140,7 +140,6 @@ const multiplyMatrix = (m1, m2) => { // 행렬 곱
     try {
 
       const ret = [];
-      console.log(m1, m2, m1.length, m2.length);
       for (let i = 0; i < m1.length; i++) {
         const tmp = [];
         for (let j = 0; j < m2[0].length; j++) {
@@ -153,7 +152,6 @@ const multiplyMatrix = (m1, m2) => { // 행렬 곱
         ret.push(tmp);
       }
 
-      console.log(ret);
       return ret;
     } catch (error) {
       logToTerminal(`Error multiplying matrix: ${error}`);
@@ -166,22 +164,25 @@ function getPosition() { // 위치 측정
   const m1 = [];
   const m2 = [];
 
-  const dist = [];
+  const dist = [0, 0, 0, 0];
   for (let i = 2; i < beaconSize; i++) {
-    dist.push(Math.max(0, (rssi[i].getRSSI() + 30) * -42));
+    const curRSSI = rssi[i].getRSSI();
+    dist[i] = Math.max(0, -(curRSSI + 30) * 42);
   }
 
   for (let i = 2; i < 4; i++) {
     m1.push([anchor_pos[i].x - anchor_pos[1].x, anchor_pos[i].y - anchor_pos[1].y]);
-    m2.push([
+    m2.push(
+      [
       Math.pow(anchor_pos[i].x, 2) + Math.pow(anchor_pos[i].y, 2) - Math.pow(dist[i], 2) - Math.pow(anchor_pos[1].x, 2) + Math.pow(anchor_pos[1].y, 2) - Math.pow(dist[1], 2)
-    ])
+      ]
+    )
   }
 
   const transM1 = transposeMatrix(m1);
   const position = multiplyMatrix(multiplyMatrix(inverseMatrix2d(multiplyMatrix(transM1, m1)), transM1), m2);
 
-  return position;
+  return [position[0][0], position[1][0]];
 }
 
 const connectBtn = document.getElementById('connect');
