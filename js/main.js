@@ -1,27 +1,27 @@
 class KalmanFilter {
   constructor(processNoise = 0.005, measurementNoise = 20) {
-		this.initialized = false;
-		this.processNoise = processNoise;
-		this.measurementNoise = measurementNoise;
-		this.predictedRSSI = 1;
+    this.initialized = false;
+    this.processNoise = processNoise;
+    this.measurementNoise = measurementNoise;
+    this.predictedRSSI = 1;
     this.priorRSSI = 1;
-		this.errorCovariance = 0;
+    this.errorCovariance = 0;
     this.priorErrorCovariance = 0;
   }
 
-	filtering(rssi) {
-		// if (!this.initialized) {
-		// 	this.initialized = true;
-		// 	this.priorRSSI = rssi;
-		// 	this.priorErrorCovariance = 1;
+  filtering(rssi) {
+    // if (!this.initialized) {
+    // 	this.initialized = true;
+    // 	this.priorRSSI = rssi;
+    // 	this.priorErrorCovariance = 1;
     // }
-		// else {
-		// 	this.priorRSSI = this.predictedRSSI;
-		// 	this.priorErrorCovariance = this.errorCovariance + this.processNoise;
+    // else {
+    // 	this.priorRSSI = this.predictedRSSI;
+    // 	this.priorErrorCovariance = this.errorCovariance + this.processNoise;
 
-		//   const kalmanGain = this.priorErrorCovariance / (this.priorErrorCovariance + this.measurementNoise);
-		//   this.predictedRSSI = this.priorRSSI == 1 ? rssi : this.priorRSSI + (kalmanGain * (rssi - this.priorRSSI));
-		//   this.errorCovarianceRSSI = (1 - kalmanGain) * this.priorErrorCovariance;
+    //   const kalmanGain = this.priorErrorCovariance / (this.priorErrorCovariance + this.measurementNoise);
+    //   this.predictedRSSI = this.priorRSSI == 1 ? rssi : this.priorRSSI + (kalmanGain * (rssi - this.priorRSSI));
+    //   this.errorCovarianceRSSI = (1 - kalmanGain) * this.priorErrorCovariance;
     // }
     this.predictedRSSI = rssi;
   }
@@ -31,46 +31,13 @@ class KalmanFilter {
   }
 }
 
-const beaconSize = 4;
-const timer = ms => new Promise(res => setTimeout(res, ms));
-
-// UI elements.
-const deviceNameLabel = document.getElementById('device-name');
-// const connectButton = document.getElementById('connect');
-// const disconnectButton = document.getElementById('disconnect');
-const toolbarContainer = document.getElementById('toolbar');
-const terminalContainer = document.getElementById('terminal');
-const sendForm = document.getElementById('send-form');
-const inputField = document.getElementById('input');
-
-// Helpers.
-const defaultDeviceName = 'Terminal';
-const terminalAutoScrollingLimit = terminalContainer.offsetHeight / 2;
-let isTerminalAutoScrolling = true;
-
-const scrollElement = (element) => {
-  const scrollTop = element.scrollHeight - element.offsetHeight;
-
-  if (scrollTop > 0) {
-    element.scrollTop = scrollTop;
-  }
-};
-
-const logToTerminal = (message, type = '') => {
-  terminalContainer.insertAdjacentHTML('beforeend',
-    `<div${type && ` class="${type}"`}>${message}</div>`);
-
-  if (isTerminalAutoScrolling) {
-    scrollElement(terminalContainer);
-  }
-};
-
-const anchor_pos = [{x: 0, y: 0}, {x: 0, y: 1000}, {x: 1000, y: 0}, {x: 1000, y: 1000}];
+const anchorSize = 4;
+const anchorPos = [{ x: 0, y: 0 }, { x: 0, y: 1000 }, { x: 1000, y: 0 }, { x: 1000, y: 1000 }];
 const rssi = [new KalmanFilter(), new KalmanFilter(), new KalmanFilter(), new KalmanFilter(),];
 let scan = null;
 let scanOn = false;
 
-async function onButtonClick() { // 버튼 클릭 시 스캔 시작
+async function syncBLEAnchors() { // 버튼 클릭 시 스캔 시작
   scanOn = !scanOn;
   if (!scanOn) {
     logToTerminal('Stopping scan...');
@@ -81,7 +48,7 @@ async function onButtonClick() { // 버튼 클릭 시 스캔 시작
 
   let filters = [];
 
-  filters.push({namePrefix: 'M09'});
+  filters.push({ namePrefix: 'M09' });
 
   let options = {};
   options.filters = filters;
@@ -102,7 +69,9 @@ async function onButtonClick() { // 버튼 클릭 시 스캔 시작
       logToTerminal(`got rssi: [ ${rssi[0].getRSSI()}, ${rssi[1].getRSSI()}, ${rssi[2].getRSSI()}, ${rssi[3].getRSSI()} ]`);
       logToTerminal(`pos: ${JSON.stringify(getPosition())}`);
     });
-  } catch(error)  {
+
+    sendPosition();
+  } catch (error) {
     log('ERROR: ' + error);
   }
 }
@@ -138,26 +107,26 @@ const transposeMatrix = mat => {  // 행렬 변환
 };
 
 const multiplyMatrix = (m1, m2) => { // 행렬 곱
-    try {
+  try {
 
-      const ret = [];
-      for (let i = 0; i < m1.length; i++) {
-        const tmp = [];
-        for (let j = 0; j < m2[0].length; j++) {
-          let cur = 0;
-          for (let k = 0; k < m2.length; k++) {
-            cur += m1[i][k] * m2[k][j];
-          }
-          tmp.push(cur);
+    const ret = [];
+    for (let i = 0; i < m1.length; i++) {
+      const tmp = [];
+      for (let j = 0; j < m2[0].length; j++) {
+        let cur = 0;
+        for (let k = 0; k < m2.length; k++) {
+          cur += m1[i][k] * m2[k][j];
         }
-        ret.push(tmp);
+        tmp.push(cur);
       }
-
-      return ret;
-    } catch (error) {
-      logToTerminal(`Error multiplying matrix: ${error}`);
-      return [];
+      ret.push(tmp);
     }
+
+    return ret;
+  } catch (error) {
+    logToTerminal(`Error multiplying matrix: ${error}`);
+    return [];
+  }
 }
 
 function getPosition() { // 위치 측정
@@ -166,16 +135,16 @@ function getPosition() { // 위치 측정
   const m2 = [];
 
   const dist = [0, 0, 0, 0];
-  for (let i = 2; i < beaconSize; i++) {
+  for (let i = 2; i < anchorSize; i++) {
     const curRSSI = rssi[i].getRSSI();
     dist[i] = Math.max(0, -(curRSSI + 30) * 42);
   }
 
-  for (let i = 2; i < 4; i++) {
-    m1.push([anchor_pos[i].x - anchor_pos[1].x, anchor_pos[i].y - anchor_pos[1].y]);
+  for (let i = 2; i < anchorSize; i++) {
+    m1.push([anchorPos[i].x - anchorPos[1].x, anchorPos[i].y - anchorPos[1].y]);
     m2.push(
       [
-      Math.pow(anchor_pos[i].x, 2) + Math.pow(anchor_pos[i].y, 2) - Math.pow(dist[i], 2) - Math.pow(anchor_pos[1].x, 2) + Math.pow(anchor_pos[1].y, 2) - Math.pow(dist[1], 2)
+        Math.pow(anchorPos[i].x, 2) + Math.pow(anchorPos[i].y, 2) - Math.pow(dist[i], 2) - Math.pow(anchorPos[1].x, 2) + Math.pow(anchorPos[1].y, 2) - Math.pow(dist[1], 2)
       ]
     )
   }
@@ -186,7 +155,52 @@ function getPosition() { // 위치 측정
   return [position[0][0], position[1][0]];
 }
 
-// miscs
+function sendPosition() {
+  if (!scanOn)
+    return;
+  const fetchUrl = "";
+  fetch(fetchUrl, {
+    method: 'POST',
+    body: JSON.stringify({
+      pos: getPosition()
+    }),
+    headers: {
+      "Content-type": "application/json"
+    }
+  }).then(() => setTimeout(sendPosition(), 100));
+}
+
+// 이 아래부터는 실제 프로덕션엔 필요없는 내용
+
+// UI elements.
+const deviceNameLabel = document.getElementById('device-name');
+const toolbarContainer = document.getElementById('toolbar');
+const terminalContainer = document.getElementById('terminal');
+const sendForm = document.getElementById('send-form');
+const inputField = document.getElementById('input');
+
+// Helpers.
+const defaultDeviceName = 'Terminal';
+const terminalAutoScrollingLimit = terminalContainer.offsetHeight / 2;
+let isTerminalAutoScrolling = true;
+
+const scrollElement = (element) => {
+  const scrollTop = element.scrollHeight - element.offsetHeight;
+
+  if (scrollTop > 0) {
+    element.scrollTop = scrollTop;
+  }
+};
+
+const logToTerminal = (message, type = '') => {
+  terminalContainer.insertAdjacentHTML('beforeend',
+    `<div${type && ` class="${type}"`}>${message}</div>`);
+
+  if (isTerminalAutoScrolling) {
+    scrollElement(terminalContainer);
+  }
+};
+
 const connectBtn = document.getElementById('connect');
 connectBtn.addEventListener('click', onButtonClick);
 
