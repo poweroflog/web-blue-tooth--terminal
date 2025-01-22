@@ -108,16 +108,12 @@ async function onButtonClick() {
 
 const inverseMatrix2d = mat => {  // 역행렬
   const ret = [[0, 0], [0, 0]];
-
-  if (!Array.isArray(mat) || mat.length < 2 || mat.length > 2 || mat[0].length != 2 || mat[1].length != 2 )
-    return ret;
-
   const determiant = mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0];
 
-  ret[0][0] = mat[1][1] / determiant;
-  ret[0][1] = -mat[0][1] / determiant;
-  ret[0][1] = -mat[1][0] / determiant;
-  ret[1][1] = mat[0][0] / determiant;
+  ret[0][0] = 1.0 * mat[1][1] / determiant;
+  ret[0][1] = 1.0 * -mat[0][1] / determiant;
+  ret[0][1] = 1.0 * -mat[1][0] / determiant;
+  ret[1][1] = 1.0 * mat[0][0] / determiant;
 
   return ret;
 };
@@ -135,7 +131,7 @@ const transposeMatrix = mat => {  // 행렬 변환
 
     return ret;
   } catch (error) {
-    logToTerminal(`Error transposing matrix: ${error}`);
+    console.log("fdf");
     return [];
   }
 };
@@ -144,17 +140,20 @@ const multiplyMatrix = (m1, m2) => { // 행렬 곱
     try {
 
       const ret = [];
-      logToTerminal(JSON.stringify(m1), JSON.stringify(m2));
+      console.log(m1, m2, m1.length, m2.length);
       for (let i = 0; i < m1.length; i++) {
         const tmp = [];
-        for (let j = 0; j < m2[0].length; i++) {
+        for (let j = 0; j < m2[0].length; j++) {
           let cur = 0;
-          for (let k = 0; k < m2.length; k++) cur += m1[i][k] * m2[k][j];
+          for (let k = 0; k < m2.length; k++) {
+            cur += m1[i][k] * m2[k][j];
+          }
           tmp.push(cur);
         }
         ret.push(tmp);
       }
 
+      console.log(ret);
       return ret;
     } catch (error) {
       logToTerminal(`Error multiplying matrix: ${error}`);
@@ -168,7 +167,7 @@ function getPosition() { // 위치 측정
   const m2 = [];
 
   const dist = [];
-  for (let i = 0; i < beaconSize; i++) {
+  for (let i = 2; i < beaconSize; i++) {
     dist.push(Math.max(0, (rssi[i].getRSSI() + 30) * -42));
   }
 
@@ -178,7 +177,6 @@ function getPosition() { // 위치 측정
       Math.pow(anchor_pos[i].x, 2) + Math.pow(anchor_pos[i].y, 2) - Math.pow(dist[i], 2) - Math.pow(anchor_pos[1].x, 2) + Math.pow(anchor_pos[1].y, 2) - Math.pow(dist[1], 2)
     ])
   }
-  JSON.stringify
 
   const transM1 = transposeMatrix(m1);
   const position = multiplyMatrix(multiplyMatrix(inverseMatrix2d(multiplyMatrix(transM1, m1)), transM1), m2);
