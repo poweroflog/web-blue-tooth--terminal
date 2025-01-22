@@ -97,8 +97,7 @@ async function onButtonClick() {
 
     navigator.bluetooth.addEventListener('advertisementreceived', event => {
       const idx = Number(event.device.name.replace('M09-', ''));
-      console.log(idx);
-      // rssi[idx].filtering(Number(event.rssi));
+      rssi[idx].filtering(Number(event.rssi));
       logToTerminal(`got rssi: [ ${rssi[0].getRSSI()}, ${rssi[1].getRSSI()}, ${rssi[2].getRSSI()}, ${rssi[3].getRSSI()} ]`);
     });
   } catch(error)  {
