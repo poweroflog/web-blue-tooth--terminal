@@ -92,13 +92,21 @@ async function toggleSyncBLEAnchors() { // 버튼 클릭 시 스캔 토글
 
     // sendPosition();
   } catch (error) {
-    console.log('Error getting BLE Anchors: ' + error);
+    console.log('Error: ' + error);
   }
 }
 
-const inverseMatrix2d = mat => {  // 역행렬 계산. mat = 형렬
+const inverseMatrix2x2 = mat => {  // 역행렬 계산. mat = 형렬
+  if (mat.length !== 2 || mat[0].length !== 2) {
+    throw new Error('Matrix must be 2x2');
+  }
+
   const ret = [[0, 0], [0, 0]];
   const determiant = mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0];
+
+  if (determiant == 0) {
+    throw new Error('Matrix is not invertible');
+  }
 
   ret[0][0] = 1.0 * mat[1][1] / determiant;
   ret[0][1] = 1.0 * -mat[0][1] / determiant;
@@ -109,45 +117,36 @@ const inverseMatrix2d = mat => {  // 역행렬 계산. mat = 형렬
 };
 
 const transposeMatrix = mat => {  // 행렬 Transpose 계산. mat = 행렬
-  const ret = [];
-  try {
-    for (let j = 0; j < mat[0].length; j++) {
-      const tmp = [];
-      for (let i = 0; i < mat.length; i++) {
-        tmp.push(mat[i][j]);
-      }
-      ret.push(tmp);
-    }
-  } catch (error) {
-    console.log(`Error transposing matrix: ${error}`);
+  if (mat.length === 0) {
+    throw new Error('Transposing matrix must not be empty.')
   }
 
-  return ret;
+  return mat[0].map((_, colIndex) => 
+    mat.map(row => row[colIndex])
+  );
 };
 
 const multiplyMatrix = (m1, m2) => { // 행렬 곱 계산. m1, m2는 각각 행렬이며, m1의 열 수가  m2의 행 수와 일치해야 함.
-  const ret = [];
-  try {
-    for (let i = 0; i < m1.length; i++) {
-      const tmp = [];
-      for (let j = 0; j < m2[0].length; j++) {
-        let cur = 0;
-        for (let k = 0; k < m2.length; k++) {
-          cur += m1[i][k] * m2[k][j];
-        }
-        tmp.push(cur);
-      }
-      ret.push(tmp);
-    }
-  } catch (error) {
-    console.log(`Error multiplying matrix: ${error}`);
+  if (m1.length < 1 || m1[0].length !== m2.length) {
+    throw new Error(`Cannot multiply matrix! ${JSON.stringify(m1)}, ${JSON.stringify(m2)}`);
   }
 
+  const ret = new Array(m1.length)
+    .fill(0)
+    .map(() => new Array(m2[0].length).fill(0));
+
+  for (let i = 0; i < m1.length; i++) {
+    for (let j = 0; j < m2[0].length; j++) {
+      for (let k = 0; k < m2.length; k++) {
+        ret[i][j] += m1[i][k] * m2[k][j];
+      }
+    }
+  }
+  
   return ret;
 }
 
 const calculateDistance = (rssi, txPower, pathLossExponent=2) => { // 거리 계산 함수. RSSI와 txPower에서 cm 단위 거리 반환
-  console.log(rssi, txPower, pathLossExponent);
   return Math.pow(10, ((txPower - rssi) / (10 * pathLossExponent))) * 100;
 }
 
@@ -156,10 +155,7 @@ function getPosition() { // 위치 측정해서 좌표를 반환
   const m1 = [];
   const m2 = [];
 
-  const dist = [];
-  for (let i = 0; i < anchorSize; i++) {
-    dist.push(0);
-  }
+  const dist = new Array(anchorSize).fill(0);
   
   // RSSI로부터 거리 계산
   for (let i = 0; i < anchorSize; i++) {
@@ -172,13 +168,13 @@ function getPosition() { // 위치 측정해서 좌표를 반환
     m1.push([anchorPos[i].x - anchorPos[0].x, anchorPos[i].y - anchorPos[0].y]);
     m2.push(
       [
-        Math.pow(anchorPos[i].x, 2) + Math.pow(anchorPos[i].y, 2) - Math.pow(dist[i], 2) - Math.pow(anchorPos[0].x, 2) + Math.pow(anchorPos[0].y, 2) - Math.pow(dist[0], 2)
+        (Math.pow(anchorPos[i].x, 2) + Math.pow(anchorPos[i].y, 2) - (Math.pow(dist[i], 2) - Math.pow(anchorPos[0].x, 2) + Math.pow(anchorPos[0].y, 2) - Math.pow(dist[0], 2))) / 2
       ]
     )
   }
 
   const transM1 = transposeMatrix(m1);
-  const position = multiplyMatrix(multiplyMatrix(inverseMatrix2d(multiplyMatrix(transM1, m1)), transM1), m2);
+  const position = multiplyMatrix(multiplyMatrix(inverseMatrix2x2(multiplyMatrix(transM1, m1)), transM1), m2);
 
   return [position[0][0], position[1][0]];
 }
@@ -247,3 +243,5 @@ terminalContainer.addEventListener('scroll', () => {
 
   isTerminalAutoScrolling = (scrollTopOffset < terminalContainer.scrollTop);
 });
+
+console.log(getPosition());
