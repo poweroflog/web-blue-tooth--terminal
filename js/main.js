@@ -9,7 +9,7 @@ class kalmanFilter {
   .getRSSI로 현재 RSSI값 가져옴
 
   */
-  constructor(processNoise = Number(1e-5), measurementNoise = 1) {
+  constructor(processNoise = Number(1e-3), measurementNoise = 1) {
     this.initialized = false;
     this.processNoise = processNoise;
     this.measurementNoise = measurementNoise;
@@ -27,7 +27,8 @@ class kalmanFilter {
       this.prevErrorCovariance = 1;
     } else {
       this.prevRSSI = this.predictedRSSI;
-      this.predictedErrorCovariance = this.prevErrorCovariance + this.processNoise;
+      this.predictedErrorCovariance =
+        this.prevErrorCovariance + this.processNoise;
 
       const kalmanGain =
         this.predictedErrorCovariance /
@@ -36,7 +37,8 @@ class kalmanFilter {
         this.prevRSSI > 0
           ? rssi
           : this.prevRSSI + kalmanGain * (rssi - this.prevRSSI);
-      this.prevErrorCovariance = (1 - kalmanGain) * this.predictedErrorCovariance;
+      this.prevErrorCovariance =
+        (1 - kalmanGain) * this.predictedErrorCovariance;
     }
 
     // this.predictedRSSI = rssi;
@@ -53,10 +55,10 @@ class kalmanFilter {
 const fetchUrl = "https://127.0.0.1";
 const anchorSize = 4;
 const anchorPos = [
-  { x: 0, y: 0, txPower: -23 },
-  { x: 0, y: 1000, txPower: -23 },
-  { x: 1000, y: 0, txPower: -23 },
-  { x: 1000, y: 1000, txPower: -23 },
+  { x: 0, y: 0, txPower: 6 },
+  { x: 0, y: 1000, txPower: 6 },
+  { x: 1000, y: 0, txPower: 6 },
+  { x: 1000, y: 1000, txPower: 6 },
 ];
 const kalmanFilters = [];
 for (let i = 0; i < anchorSize; i++) {
@@ -66,6 +68,8 @@ for (let i = 0; i < anchorSize; i++) {
 // BLE 스캔
 let scan = null;
 let scanOn = false;
+let scanInterval = 0;
+let sendInterval = 0;
 
 // 실제로 Front-end 버튼과 연결할 함수
 // 임시로 모바일 터미널 디버깅을 위해 logToTerminal을 console.log 대신 쓰고 있음
@@ -74,7 +78,7 @@ async function toggleSyncBLEAnchors() {
   scanOn = !scanOn;
   if (!scanOn) {
     logToTerminal("Stopping scan...");
-    scan.stop();
+    if (scan != null) scan.stop();
     logToTerminal("Stopped.  scan.active = " + scan.active);
     return;
   }
@@ -103,7 +107,16 @@ async function toggleSyncBLEAnchors() {
       kalmanFilters[idx].filtering(Number(event.rssi));
     });
 
-    // setInterval(sendPosition(), 100);
+    // 포지션 로깅
+    scanInterval = setInterval(() => {
+      if (!scanOn) {
+        clearInterval(scanInterval);
+        return;
+      }
+      logToTerminal(JSON.stringify(getPosition()));
+    }, 1000);
+
+    sendInterval = setInterval(sendPosition(), 100);
   } catch (error) {
     console.log("Error: " + error);
   }
@@ -180,7 +193,11 @@ function getPosition() {
 
   // RSSI로부터 거리 계산
   for (let i = 0; i < anchorSize; i++) {
-    dist[i] = calculateDistance(kalmanFilters[i].getRSSI(), anchorPos[i].txPower, 4);
+    dist[i] = calculateDistance(
+      kalmanFilters[i].getRSSI(),
+      anchorPos[i].txPower,
+      4
+    );
   }
 
   logToTerminal(
@@ -213,7 +230,10 @@ function getPosition() {
 
 function sendPosition() {
   // 서버와 통신해서 좌표를 Post하는 함수
-  if (!scanOn) return;
+  if (!scanOn) {
+    clearInterval(sendInterval);
+    return;
+  }
   fetch(fetchUrl, {
     method: "POST",
     body: JSON.stringify({
@@ -224,12 +244,6 @@ function sendPosition() {
     },
   }).then((response) => {});
 }
-
-// 포지션 로깅
-setInterval(() => {
-  if (!scanOn) return;
-  logToTerminal(JSON.stringify(getPosition()));
-}, 100);
 
 // 이 아래부터는 실제 프로덕션엔 필요없는 내용
 
