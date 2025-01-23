@@ -189,8 +189,8 @@ function getPosition() {
     m2.push([
       (Math.pow(anchorPos[i].x, 2) +
         Math.pow(anchorPos[i].y, 2) -
-        (Math.pow(dist[i], 2) -
-          Math.pow(anchorPos[0].x, 2) +
+        Math.pow(dist[i], 2) -
+        (Math.pow(anchorPos[0].x, 2) +
           Math.pow(anchorPos[0].y, 2) -
           Math.pow(dist[0], 2))) /
         2,
@@ -222,9 +222,8 @@ function sendPosition() {
 
 // 포지션 로깅
 setInterval(() => {
-  if (!scanOn)
-    return;
-  
+  if (!scanOn) return;
+
   logToTerminal(
     `rssi: [ ${kalmanFilters[0].getRSSI()}, ${kalmanFilters[1].getRSSI()}, ${kalmanFilters[2].getRSSI()}, ${kalmanFilters[3].getRSSI()} ]`
   );
