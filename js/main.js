@@ -125,7 +125,7 @@ const inverseMatrix2x2 = (mat) => {
   }
 
   ret[0][0] = (1.0 * mat[1][1]) / determiant;
-  ret[0][1] = (1.0 * -mat[0][1]) / determiant;
+  ret[1][0] = (1.0 * -mat[0][1]) / determiant;
   ret[0][1] = (1.0 * -mat[1][0]) / determiant;
   ret[1][1] = (1.0 * mat[0][0]) / determiant;
 
