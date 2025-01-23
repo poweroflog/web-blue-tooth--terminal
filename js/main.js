@@ -43,7 +43,7 @@ class kalmanFilter {
 
 // 상수들
 // 기본적으로 4개 사이즈를 쓴다 가정하고 앵커 개수와 포지션은 미리 임의로 설정
-const fetchUrl = "";
+const fetchUrl = "https://127.0.0.1";
 const anchorSize = 4;
 const anchorPos = [{ x: 0, y: 0 }, { x: 0, y: 1000 }, { x: 1000, y: 0 }, { x: 1000, y: 1000 }];
 const kalmanFilters = [];
@@ -90,7 +90,7 @@ async function toggleSyncBLEAnchors() { // 버튼 클릭 시 스캔 토글
       logToTerminal(`pos: ${JSON.stringify(getPosition())}`);
     });  
 
-    sendPosition();
+    // sendPosition();
   } catch (error) {
     console.log('Error getting BLE Anchors: ' + error);
   }
