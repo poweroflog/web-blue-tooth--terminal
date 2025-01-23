@@ -223,7 +223,7 @@ const logToTerminal = (message, type = '') => {
 };
 
 const connectBtn = document.getElementById('connect');
-connectBtn.addEventListener('click', onButtonClick);
+connectBtn.addEventListener('click', toggleSyncBLEAnchors);
 
 sendForm.addEventListener('submit', (event) => {
   event.preventDefault();
