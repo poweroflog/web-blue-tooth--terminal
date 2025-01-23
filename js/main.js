@@ -52,10 +52,10 @@ class kalmanFilter {
 const fetchUrl = "https://127.0.0.1";
 const anchorSize = 4;
 const anchorPos = [
-  { x: 0, y: 0, txPower: -50 },
-  { x: 0, y: 1000, txPower: -50 },
-  { x: 1000, y: 0, txPower: -50 },
-  { x: 1000, y: 1000, txPower: -50 },
+  { x: 0, y: 0, txPower: 3 },
+  { x: 0, y: 1000, txPower: 3 },
+  { x: 1000, y: 0, txPower: 3 },
+  { x: 1000, y: 1000, txPower: 3 },
 ];
 const kalmanFilters = [];
 for (let i = 0; i < anchorSize; i++) {
@@ -100,6 +100,7 @@ async function toggleSyncBLEAnchors() {
     navigator.bluetooth.addEventListener("advertisementreceived", (event) => {
       const idx = Number(event.device.name.replace("M09-", ""));
       kalmanFilters[idx].filtering(Number(event.rssi));
+      anchorPos.txPower = event.txPower;
     });
 
     // setInterval(sendPosition(), 100);
