@@ -88,7 +88,7 @@ async function toggleSyncBLEAnchors() { // 버튼 클릭 시 스캔 토글
       kalmanFilters[idx].filtering(Number(event.rssi));
       logToTerminal(`got rssi: [ ${kalmanFilters[0].getRSSI()}, ${kalmanFilters[1].getRSSI()}, ${kalmanFilters[2].getRSSI()}, ${kalmanFilters[3].getRSSI()} ]`);
       logToTerminal(`pos: ${JSON.stringify(getPosition())}`);
-    });
+    });  
 
     sendPosition();
   } catch (error) {
@@ -128,7 +128,6 @@ const transposeMatrix = mat => {  // 행렬 Transpose 계산. mat = 행렬
 const multiplyMatrix = (m1, m2) => { // 행렬 곱 계산. m1, m2는 각각 행렬이며, m1의 열 수가  m2의 행 수와 일치해야 함.
   const ret = [];
   try {
-    const ret = [];
     for (let i = 0; i < m1.length; i++) {
       const tmp = [];
       for (let j = 0; j < m2[0].length; j++) {
@@ -156,11 +155,13 @@ function getPosition() { // 위치 측정해서 좌표를 반환
   for (let i = 0; i < anchorSize; i++) {
     dist.push(0);
   }
+  
   // RSSI로부터 거리 계산
   for (let i = 2; i < anchorSize; i++) {
     const curRSSI = kalmanFilters[i].getRSSI();
     dist[i] = Math.max(0, -(curRSSI + 30) * 42);
   }
+
   // 기본 행렬 m1, m2 제작 후 행렬 계산
   for (let i = 2; i < anchorSize; i++) {
     m1.push([anchorPos[i].x - anchorPos[1].x, anchorPos[i].y - anchorPos[1].y]);
