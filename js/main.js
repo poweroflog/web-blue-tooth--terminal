@@ -52,10 +52,10 @@ class kalmanFilter {
 const fetchUrl = "https://127.0.0.1";
 const anchorSize = 4;
 const anchorPos = [
-  { x: 0, y: 0, txPower: -23 },
-  { x: 0, y: 1000, txPower: -23 },
-  { x: 1000, y: 0, txPower: -23 },
-  { x: 1000, y: 1000, txPower: -23 },
+  { x: 0, y: 0, txPower: -42 },
+  { x: 0, y: 1000, txPower: -42 },
+  { x: 1000, y: 0, txPower: -42 },
+  { x: 1000, y: 1000, txPower: -42 },
 ];
 const kalmanFilters = [];
 for (let i = 0; i < anchorSize; i++) {
@@ -222,10 +222,13 @@ function sendPosition() {
 
 // 포지션 로깅
 setInterval(() => {
-  logToTerminal(JSON.stringify(getPosition()));
+  if (!scanOn)
+    return;
+  
   logToTerminal(
     `rssi: [ ${kalmanFilters[0].getRSSI()}, ${kalmanFilters[1].getRSSI()}, ${kalmanFilters[2].getRSSI()}, ${kalmanFilters[3].getRSSI()} ]`
   );
+  logToTerminal(JSON.stringify(getPosition()));
 }, 100);
 
 // 이 아래부터는 실제 프로덕션엔 필요없는 내용
