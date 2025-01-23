@@ -38,7 +38,8 @@ class kalmanFilter {
           : this.priorRSSI + kalmanGain * (rssi - this.priorRSSI);
       this.errorCovarianceRSSI = (1 - kalmanGain) * this.priorErrorCovariance;
     }
-    this.predictedRSSI = rssi;
+    
+    // this.predictedRSSI = rssi;
   }
 
   getRSSI() {
@@ -180,7 +181,6 @@ function getPosition() {
   // RSSI로부터 거리 계산
   for (let i = 0; i < anchorSize; i++) {
     dist[i] = calculateDistance(kalmanFilters[i].getRSSI(), anchorPos[i].txPower, 4);
-    logToTerminal(`tx: ${anchorPos[i].txPower}`);
   }
 
   logToTerminal(
