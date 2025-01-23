@@ -45,7 +45,7 @@ class kalmanFilter {
 // 기본적으로 4개 사이즈를 쓴다 가정하고 앵커 개수와 포지션은 미리 임의로 설정
 const fetchUrl = "https://127.0.0.1";
 const anchorSize = 4;
-const anchorPos = [{ x: 0, y: 0, txPower: -55 }, { x: 0, y: 1000, txPower: -55 }, { x: 1000, y: 0, txPower: -55 }, { x: 1000, y: 1000, txPower: -55 }];
+const anchorPos = [{ x: 0, y: 0, txPower: -23 }, { x: 0, y: 1000, txPower: -23 }, { x: 1000, y: 0, txPower: -23 }, { x: 1000, y: 1000, txPower: -23 }];
 const kalmanFilters = [];
 for (let i = 0; i < anchorSize; i++) {
   kalmanFilters.push(new kalmanFilter());
@@ -86,10 +86,13 @@ async function toggleSyncBLEAnchors() { // 버튼 클릭 시 스캔 토글
     navigator.bluetooth.addEventListener('advertisementreceived', event => {
       const idx = Number(event.device.name.replace('M09-', ''));
       kalmanFilters[idx].filtering(Number(event.rssi));
-      logToTerminal(`got rssi: [ ${kalmanFilters[0].getRSSI()}, ${kalmanFilters[1].getRSSI()}, ${kalmanFilters[2].getRSSI()}, ${kalmanFilters[3].getRSSI()} ]`);
-      logToTerminal(`pos: ${JSON.stringify(getPosition())}`);
     });  
 
+    while (scanOn) {
+      let event = new CustomEvent('logpos');
+      document.dispatchEvent(event);
+      setTimeout(100);
+    }
     // sendPosition();
   } catch (error) {
     console.log('Error: ' + error);
@@ -193,6 +196,12 @@ function sendPosition() { // 서버와 통신해서 좌표를 Post하는 함수
   }).then(() => setTimeout(sendPosition(), 100));
 }
 
+// 포지션 로깅
+document.addEventListener('logpos', () => {
+  logToTerminal(JSON.stringify(getPosition()));
+  logToTerminal(`rssi: [ ${kalmanFilters[0].getRSSI()}, ${kalmanFilters[1].getRSSI()}, ${kalmanFilters[2].getRSSI()}, ${kalmanFilters[3].getRSSI()} ]`);
+});
+
 // 이 아래부터는 실제 프로덕션엔 필요없는 내용
 
 // UI
@@ -243,5 +252,3 @@ terminalContainer.addEventListener('scroll', () => {
 
   isTerminalAutoScrolling = (scrollTopOffset < terminalContainer.scrollTop);
 });
-
-console.log(getPosition());
