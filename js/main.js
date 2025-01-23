@@ -52,10 +52,10 @@ class kalmanFilter {
 const fetchUrl = "https://127.0.0.1";
 const anchorSize = 4;
 const anchorPos = [
-  { x: 0, y: 0, txPower: -42 },
-  { x: 0, y: 1000, txPower: -42 },
-  { x: 1000, y: 0, txPower: -42 },
-  { x: 1000, y: 1000, txPower: -42 },
+  { x: 0, y: 0, txPower: -55 },
+  { x: 0, y: 1000, txPower: -55 },
+  { x: 1000, y: 0, txPower: -55 },
+  { x: 1000, y: 1000, txPower: -55 },
 ];
 const kalmanFilters = [];
 for (let i = 0; i < anchorSize; i++) {
@@ -183,6 +183,11 @@ function getPosition() {
     dist[i] = calculateDistance(curRSSI, anchorPos[i].txPower);
   }
 
+  logToTerminal(
+    `rssi: [ ${kalmanFilters[0].getRSSI()}, ${kalmanFilters[1].getRSSI()}, ${kalmanFilters[2].getRSSI()}, ${kalmanFilters[3].getRSSI()} ]`
+  );
+  logToTerminal(`dist: [ ${dist[0]}, ${dist[1]}, ${dist[2]}, ${dist[3]} ]`);
+
   // 기본 행렬 m1, m2 제작 후 행렬 계산
   for (let i = 1; i < anchorSize; i++) {
     m1.push([anchorPos[i].x - anchorPos[0].x, anchorPos[i].y - anchorPos[0].y]);
@@ -223,10 +228,6 @@ function sendPosition() {
 // 포지션 로깅
 setInterval(() => {
   if (!scanOn) return;
-
-  logToTerminal(
-    `rssi: [ ${kalmanFilters[0].getRSSI()}, ${kalmanFilters[1].getRSSI()}, ${kalmanFilters[2].getRSSI()}, ${kalmanFilters[3].getRSSI()} ]`
-  );
   logToTerminal(JSON.stringify(getPosition()));
 }, 100);
 
