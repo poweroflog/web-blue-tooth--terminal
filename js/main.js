@@ -147,7 +147,8 @@ const multiplyMatrix = (m1, m2) => { // 행렬 곱 계산. m1, m2는 각각 행�
 }
 
 const calculateDistance = (rssi, txPower, pathLossExponent=2) => { // 거리 계산 함수. RSSI와 txPower에서 cm 단위 거리 반환
-    return Math.pow(1000, ((txPower - rssi) / (10 * pathLossExponent)));
+  console.log(rssi, txPower, pathLossExponent);
+  return Math.pow(1000, ((txPower - rssi) / (10 * pathLossExponent)));
 }
 
 function getPosition() { // 위치 측정해서 좌표를 반환
@@ -163,15 +164,15 @@ function getPosition() { // 위치 측정해서 좌표를 반환
   // RSSI로부터 거리 계산
   for (let i = 0; i < anchorSize; i++) {
     const curRSSI = kalmanFilters[i].getRSSI();
-    dist[i] = calculateDistance(curRSSI, anchorPos.txPower);
+    dist[i] = calculateDistance(curRSSI, anchorPos[i].txPower);
   }
 
   // 기본 행렬 m1, m2 제작 후 행렬 계산
-  for (let i = 0; i < anchorSize; i++) {
-    m1.push([anchorPos[i].x - anchorPos[1].x, anchorPos[i].y - anchorPos[1].y]);
+  for (let i = 1; i < anchorSize; i++) {
+    m1.push([anchorPos[i].x - anchorPos[0].x, anchorPos[i].y - anchorPos[0].y]);
     m2.push(
       [
-        Math.pow(anchorPos[i].x, 2) + Math.pow(anchorPos[i].y, 2) - Math.pow(dist[i], 2) - Math.pow(anchorPos[1].x, 2) + Math.pow(anchorPos[1].y, 2) - Math.pow(dist[1], 2)
+        Math.pow(anchorPos[i].x, 2) + Math.pow(anchorPos[i].y, 2) - Math.pow(dist[i], 2) - Math.pow(anchorPos[0].x, 2) + Math.pow(anchorPos[0].y, 2) - Math.pow(dist[0], 2)
       ]
     )
   }
