@@ -180,8 +180,8 @@ function getPosition() {
 
   // RSSI로부터 거리 계산
   for (let i = 0; i < anchorSize; i++) {
-    const curRSSI = kalmanFilters[i].getRSSI();
-    dist[i] = calculateDistance(curRSSI, anchorPos[i].txPower);
+    dist[i] = calculateDistance(kalmanFilters[i].getRSSI(), anchorPos[i].txPower, 4);
+    logToTerminal(`tx: ${anchorPos[i].txPower}`);
   }
 
   logToTerminal(
