@@ -9,7 +9,7 @@ class kalmanFilter {
   .getRSSI로 현재 RSSI값 가져옴
 
   */
-  constructor(processNoise = Number(1e-3), measurementNoise = 1) {
+  constructor(processNoise = 0.1, measurementNoise = 1) {
     this.initialized = false;
     this.processNoise = processNoise;
     this.measurementNoise = measurementNoise;
@@ -78,8 +78,10 @@ async function toggleSyncBLEAnchors() {
   scanOn = !scanOn;
   if (!scanOn) {
     logToTerminal("Stopping scan...");
-    if (scan != null) scan.stop();
-    logToTerminal("Stopped.  scan.active = " + scan.active);
+    if (scan != null) {
+      scan.stop();
+      logToTerminal("Stopped.  scan.active = " + scan.active);
+    }
     return;
   }
 
@@ -196,7 +198,7 @@ function getPosition() {
     dist[i] = calculateDistance(
       kalmanFilters[i].getRSSI(),
       anchorPos[i].txPower,
-      4
+      3
     );
   }
 
