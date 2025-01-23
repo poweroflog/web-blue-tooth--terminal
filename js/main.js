@@ -148,7 +148,7 @@ const multiplyMatrix = (m1, m2) => { // 행렬 곱 계산. m1, m2는 각각 행�
 
 const calculateDistance = (rssi, txPower, pathLossExponent=2) => { // 거리 계산 함수. RSSI와 txPower에서 cm 단위 거리 반환
   console.log(rssi, txPower, pathLossExponent);
-  return Math.pow(1000, ((txPower - rssi) / (10 * pathLossExponent)));
+  return Math.pow(10, ((txPower - rssi) / (10 * pathLossExponent))) * 100;
 }
 
 function getPosition() { // 위치 측정해서 좌표를 반환
