@@ -13,32 +13,32 @@ class kalmanFilter {
     this.initialized = false;
     this.processNoise = processNoise;
     this.measurementNoise = measurementNoise;
-    this.predictedRSSI = 1;
-    this.priorRSSI = 1;
-    this.errorCovariance = 0;
-    this.priorErrorCovariance = 0;
+    this.predictedRSSI = 998244353;
+    this.prevRSSI = 1;
+    this.prevErrorCovariance = 0;
+    this.predictedErrorCovariance = 0;
   }
 
   filtering(rssi) {
     // 칼먼 필터링. rssi = 측정된 RSSI 값
     if (!this.initialized) {
       this.initialized = true;
-      this.priorRSSI = rssi;
-      this.priorErrorCovariance = 1;
+      this.prevRSSI = rssi;
+      this.prevErrorCovariance = 1;
     } else {
-      this.priorRSSI = this.predictedRSSI;
-      this.priorErrorCovariance = this.errorCovariance + this.processNoise;
+      this.prevRSSI = this.predictedRSSI;
+      this.predictedErrorCovariance = this.prevErrorCovariance + this.processNoise;
 
       const kalmanGain =
-        this.priorErrorCovariance /
-        (this.priorErrorCovariance + this.measurementNoise);
+        this.predictedErrorCovariance /
+        (this.predictedErrorCovariance + this.measurementNoise);
       this.predictedRSSI =
-        this.priorRSSI == 1
+        this.prevRSSI > 0
           ? rssi
-          : this.priorRSSI + kalmanGain * (rssi - this.priorRSSI);
-      this.errorCovarianceRSSI = (1 - kalmanGain) * this.priorErrorCovariance;
+          : this.prevRSSI + kalmanGain * (rssi - this.prevRSSI);
+      this.prevErrorCovariance = (1 - kalmanGain) * this.predictedErrorCovariance;
     }
-    
+
     // this.predictedRSSI = rssi;
   }
 
