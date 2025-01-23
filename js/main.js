@@ -9,7 +9,7 @@ class kalmanFilter {
   .getRSSI로 현재 RSSI값 가져옴
 
   */
-  constructor(processNoise = 0.005, measurementNoise = 20) {
+  constructor(processNoise = Number(1e-5), measurementNoise = 1) {
     this.initialized = false;
     this.processNoise = processNoise;
     this.measurementNoise = measurementNoise;
@@ -20,19 +20,19 @@ class kalmanFilter {
   }
 
   filtering(rssi) { // 칼먼 필터링. rssi = 측정된 RSSI 값
-    // if (!this.initialized) {
-    // 	this.initialized = true;
-    // 	this.priorRSSI = rssi;
-    // 	this.priorErrorCovariance = 1;
-    // }
-    // else {
-    // 	this.priorRSSI = this.predictedRSSI;
-    // 	this.priorErrorCovariance = this.errorCovariance + this.processNoise;
+    if (!this.initialized) {
+    	this.initialized = true;
+    	this.priorRSSI = rssi;
+    	this.priorErrorCovariance = 1;
+    }
+    else {
+    	this.priorRSSI = this.predictedRSSI;
+    	this.priorErrorCovariance = this.errorCovariance + this.processNoise;
 
-    //   const kalmanGain = this.priorErrorCovariance / (this.priorErrorCovariance + this.measurementNoise);
-    //   this.predictedRSSI = this.priorRSSI == 1 ? rssi : this.priorRSSI + (kalmanGain * (rssi - this.priorRSSI));
-    //   this.errorCovarianceRSSI = (1 - kalmanGain) * this.priorErrorCovariance;
-    // }
+      const kalmanGain = this.priorErrorCovariance / (this.priorErrorCovariance + this.measurementNoise);
+      this.predictedRSSI = this.priorRSSI == 1 ? rssi : this.priorRSSI + (kalmanGain * (rssi - this.priorRSSI));
+      this.errorCovarianceRSSI = (1 - kalmanGain) * this.priorErrorCovariance;
+    }
     this.predictedRSSI = rssi;
   }
 
@@ -45,7 +45,7 @@ class kalmanFilter {
 // 기본적으로 4개 사이즈를 쓴다 가정하고 앵커 개수와 포지션은 미리 임의로 설정
 const fetchUrl = "https://127.0.0.1";
 const anchorSize = 4;
-const anchorPos = [{ x: 0, y: 0 }, { x: 0, y: 1000 }, { x: 1000, y: 0 }, { x: 1000, y: 1000 }];
+const anchorPos = [{ x: 0, y: 0, txPower: -55 }, { x: 0, y: 1000, txPower: -55 }, { x: 1000, y: 0, txPower: -55 }, { x: 1000, y: 1000, txPower: -55 }];
 const kalmanFilters = [];
 for (let i = 0; i < anchorSize; i++) {
   kalmanFilters.push(new kalmanFilter());
@@ -146,6 +146,10 @@ const multiplyMatrix = (m1, m2) => { // 행렬 곱 계산. m1, m2는 각각 행�
   return ret;
 }
 
+const calculateDistance = (rssi, txPower, pathLossExponent=2) => { // 거리 계산 함수. RSSI와 txPower에서 cm 단위 거리 반환
+    return Math.pow(1000, ((txPower - rssi) / (10 * pathLossExponent)));
+}
+
 function getPosition() { // 위치 측정해서 좌표를 반환
   // 삼변 측량법
   const m1 = [];
@@ -157,13 +161,13 @@ function getPosition() { // 위치 측정해서 좌표를 반환
   }
   
   // RSSI로부터 거리 계산
-  for (let i = 2; i < anchorSize; i++) {
+  for (let i = 0; i < anchorSize; i++) {
     const curRSSI = kalmanFilters[i].getRSSI();
-    dist[i] = Math.max(0, -(curRSSI + 30) * 42);
+    dist[i] = calculateDistance(curRSSI, anchorPos.txPower);
   }
 
   // 기본 행렬 m1, m2 제작 후 행렬 계산
-  for (let i = 2; i < anchorSize; i++) {
+  for (let i = 0; i < anchorSize; i++) {
     m1.push([anchorPos[i].x - anchorPos[1].x, anchorPos[i].y - anchorPos[1].y]);
     m2.push(
       [
