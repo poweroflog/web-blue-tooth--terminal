@@ -100,7 +100,7 @@ async function toggleSyncBLEAnchors() {
     navigator.bluetooth.addEventListener("advertisementreceived", (event) => {
       const idx = Number(event.device.name.replace("M09-", ""));
       kalmanFilters[idx].filtering(Number(event.rssi));
-      anchorPos.txPower = event.txPower;
+      anchorPos[idx].txPower = event.txPower;
     });
 
     // setInterval(sendPosition(), 100);
