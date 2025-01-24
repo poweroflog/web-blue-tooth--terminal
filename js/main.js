@@ -14,7 +14,7 @@ class kalmanFilter {
     this.processNoise = processNoise;
     this.measurementNoise = measurementNoise;
     this.predictedRSSI = 998244353;
-    this.prevRSSI = 1;
+    this.prevRSSI = 998244353;
     this.prevErrorCovariance = 0;
     this.predictedErrorCovariance = 0;
   }
@@ -52,16 +52,16 @@ class kalmanFilter {
 
 // 상수들
 // 기본적으로 4개 사이즈를 쓴다 가정하고 앵커 개수와 포지션은 미리 임의로 설정
+const debugRSSI = true;
 const fetchUrl = "https://127.0.0.1";
-const anchorSize = 4;
-const anchorPos = [
-  { x: 0, y: 0, txPower: -42  },
-  { x: 0, y: 1000, txPower: -42 },
-  { x: 1000, y: 0, txPower: -42 },
-  { x: 1000, y: 1000, txPower: -42 },
+const anchors = [
+  { x: 0, y: 0, txPower: -42, enabled: true },
+  { x: 0, y: 1000, txPower: -42, enabled: true },
+  { x: 1000, y: 0, txPower: -42, enabled: false },
+  { x: 1000, y: 1000, txPower: -42, enabled: true },
 ];
 const kalmanFilters = [];
-for (let i = 0; i < anchorSize; i++) {
+for (let i = 0; i < anchors.length; i++) {
   kalmanFilters.push(new kalmanFilter());
 }
 
@@ -87,10 +87,11 @@ async function toggleSyncBLEAnchors() {
 
   let filters = [];
 
-  filters.push({ namePrefix: "M09" });
+  filters.push({ namePrefix: "M09-" });
 
   let options = {};
   options.filters = filters;
+  options.keepRepeatedDevices = true;
 
   try {
     logToTerminal(
@@ -105,7 +106,10 @@ async function toggleSyncBLEAnchors() {
     logToTerminal(" filters: " + JSON.stringify(scan.filters));
 
     navigator.bluetooth.addEventListener("advertisementreceived", (event) => {
-      const idx = Number(event.device.name.replace("M09-", ""));
+      const reResult = /M09-(\d+)/.exec(event.device.name);
+      if (reResult == null || reResult.length < 2)
+        return;
+      const idx = Number(reResult[1]);
       kalmanFilters[idx].filtering(Number(event.rssi));
     });
 
@@ -115,7 +119,7 @@ async function toggleSyncBLEAnchors() {
         clearInterval(scanInterval);
         return;
       }
-      logToTerminal(JSON.stringify(getPosition()));
+      logToTerminal(`[Target] pos: ${JSON.stringify(getPosition())}`);
     }, 1000);
 
     sendInterval = setInterval(sendPosition(), 100);
@@ -191,34 +195,57 @@ function getPosition() {
   const m1 = [];
   const m2 = [];
 
-  const dist = new Array(anchorSize).fill(0);
+  const tmpRssi = new Array(anchors.length).fill(0);
+  const dist = new Array(anchors.length).fill(0);
 
   // RSSI로부터 거리 계산
-  for (let i = 0; i < anchorSize; i++) {
+  for (let i = 0; i < anchors.length; i++) {
+    if (!anchors[i].enabled)
+      continue;
+
     dist[i] = calculateDistance(
-      kalmanFilters[i].getRSSI(),
-      anchorPos[i].txPower,
+      tmpRssi[i] = kalmanFilters[i].getRSSI(),
+      anchors[i].txPower,
       3
     );
   }
 
-  logToTerminal(
-    `rssi: [ ${kalmanFilters[0].getRSSI()}, ${kalmanFilters[1].getRSSI()}, ${kalmanFilters[2].getRSSI()}, ${kalmanFilters[3].getRSSI()} ]`
-  );
-  logToTerminal(`dist: [ ${dist[0]}, ${dist[1]}, ${dist[2]}, ${dist[3]} ]`);
+  if (debugRSSI) {
+    logToTerminal("====== debug ======")
+    for (let i = 0; i < anchors.length; i++) {
+      if (!anchors[i].enabled)
+        continue;
+  
+      logToTerminal(`[Anchor ${i}] pos: (${anchors[i].x}, ${anchors[i].y}) rssi: ${tmpRssi[i]} dist: ${dist[i]}`);
+    }
+    logToTerminal("====== debug ======")
+  }
 
   // 기본 행렬 m1, m2 제작 후 행렬 계산
-  for (let i = 1; i < anchorSize; i++) {
-    m1.push([anchorPos[i].x - anchorPos[0].x, anchorPos[i].y - anchorPos[0].y]);
+  let meanIdx = -1;
+  for (let i = 0; i < anchors.length; i++) {
+    if (!anchors[i].enabled)
+      continue;
+
+    if (meanIdx == -1) {
+      meanIdx = i;
+      continue;
+    }
+
+    m1.push([anchors[i].x - anchors[meanIdx].x, anchors[i].y - anchors[meanIdx].y]);
     m2.push([
-      (Math.pow(anchorPos[i].x, 2) +
-        Math.pow(anchorPos[i].y, 2) -
+      (Math.pow(anchors[i].x, 2) +
+        Math.pow(anchors[i].y, 2) -
         Math.pow(dist[i], 2) -
-        (Math.pow(anchorPos[0].x, 2) +
-          Math.pow(anchorPos[0].y, 2) -
-          Math.pow(dist[0], 2))) /
+        (Math.pow(anchors[meanIdx].x, 2) +
+          Math.pow(anchors[meanIdx].y, 2) -
+          Math.pow(dist[meanIdx], 2))) /
         2,
     ]);
+  }
+
+  if (m1.length < 2) {
+    throw new Error("3 or more anchors must be enabled!");
   }
 
   const transM1 = transposeMatrix(m1);
