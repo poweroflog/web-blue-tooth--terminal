@@ -55,10 +55,14 @@ class kalmanFilter {
 const debugRSSI = true;
 const fetchUrl = "https://127.0.0.1";
 const anchors = [
-  { x: 0, y: 0, txPower: -42, enabled: true },
-  { x: 0, y: 1000, txPower: -42, enabled: true },
+  { x: 0, y: 0, txPower: -42, enabled: false },
+  { x: 0, y: 1000, txPower: -42, enabled: false },
   { x: 1000, y: 0, txPower: -42, enabled: false },
-  { x: 1000, y: 1000, txPower: -42, enabled: true },
+  { x: 1000, y: 1000, txPower: -42, enabled: false },
+  { x: 0, y: 0, txPower: -42, enabled: true },
+  { x: 0, y: 800, txPower: -42, enabled: true },
+  { x: 800, y: 0, txPower: -42, enabled: true },
+  { x: 800, y: 800, txPower: -42, enabled: true },
 ];
 const kalmanFilters = [];
 for (let i = 0; i < anchors.length; i++) {
