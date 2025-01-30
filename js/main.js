@@ -210,7 +210,6 @@ function getPosition() {
     dist[i] = calculateDistance(
       tmpRssi[i] = kalmanFilters[i].getRSSI(),
       anchors[i].txPower,
-      Math.PI / 2
     );
   }
 
