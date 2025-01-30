@@ -55,10 +55,10 @@ class kalmanFilter {
 const debugRSSI = true;
 const fetchUrl = "https://127.0.0.1";
 const anchors = [
-  { x: 500, y: 200, txPower: -55, enabled: true },
-  { x: 0, y: 1000, txPower: -42, enabled: false },
-  { x: 1000, y: 0, txPower: -42, enabled: false },
-  { x: 1000, y: 1000, txPower: -42, enabled: false },
+  { x: 500, y: 300, txPower: -45, enabled: true },
+  { x: 0, y: 1000, txPower: -45, enabled: false },
+  { x: 1000, y: 0, txPower: -45, enabled: false },
+  { x: 500, y: 1200, txPower: -45, enabled: true },
   { x: 0, y: 0, txPower: -45, enabled: true },
   { x: 0, y: 1000, txPower: -45, enabled: true },
   { x: 1000, y: 0, txPower: -45, enabled: true },
