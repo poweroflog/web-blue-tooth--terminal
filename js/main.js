@@ -52,7 +52,7 @@ class kalmanFilter {
 
 // 상수들
 // 기본적으로 4개 사이즈를 쓴다 가정하고 앵커 개수와 포지션은 미리 임의로 설정
-const debugRSSI = true;
+const debugRSSI = false;
 const fetchUrl = "https://127.0.0.1";
 const anchors = [
   { x: 500, y: 300, txPower: -45, enabled: true },
